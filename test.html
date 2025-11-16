@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气应用测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        .location-status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ 3D 天气应用测试</h1>
+        <p>这个页面帮助你测试天气应用的各项功能</p>
+        
+        <div class="test-section">
+            <h2>🔍 地理位置测试</h2>
+            <button onclick="testGeolocation()">测试获取当前位置</button>
+            <button onclick="requestLocationPermission()">请求位置权限</button>
+            <div id="locationResult" class="location-status"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌡️ 天气 API 测试</h2>
+            <button onclick="testDirectAPI()">测试直接 WeatherAPI</button>
+            <button onclick="testVercelAPI()">测试 Vercel API 路由</button>
+            <button onclick="testLocalAPI()">测试本地 API</button>
+            <div id="weatherResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 环境检查</h2>
+            <button onclick="checkEnvironment()">检查环境变量</button>
+            <div id="envResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📱 应用状态</h2>
+            <div id="appStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = '14b98029813d49acbc1101959251611';
+        const VERCEL_API_URL = 'https://3d-weather-codrops-main-biq1za6yf-ailoen1s-projects.vercel.app/api/weather';
+        
+        // 检查应用状态
+        function updateAppStatus() {
+            const statusDiv = document.getElementById('appStatus');
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const isHTTPS = window.location.protocol === 'https:';
+            
+            statusDiv.innerHTML = `
+                <div class="info">
+                    <strong>当前环境:</strong> ${isLocalhost ? '本地开发' : '生产环境'}<br>
+                    <strong>协议:</strong> ${window.location.protocol}<br>
+                    <strong>主机:</strong> ${window.location.hostname}<br>
+                    <strong>API Key:</strong> ${API_KEY ? '已设置' : '未设置'}<br>
+                    <strong>地理位置支持:</strong> ${'geolocation' in navigator ? '✅ 支持' : '❌ 不支持'}
+                </div>
+            `;
+        }
+
+        // 测试地理位置
+        function testGeolocation() {
+            const resultDiv = document.getElementById('locationResult');
+            
+            if (!('geolocation' in navigator)) {
+                resultDiv.innerHTML = '<div class="error">浏览器不支持地理位置</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">正在获取位置...</div>';
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>位置获取成功!</strong><br>
+                            纬度: ${latitude}<br>
+                            经度: ${longitude}<br>
+                            精度: ${accuracy}米<br>
+                            <button onclick="testWeatherByCoords(${latitude}, ${longitude})">用此坐标测试天气</button>
+                        </div>
+                    `;
+                },
+                (error) => {
+                    let errorMessage = '未知错误';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '用户拒绝了地理位置权限';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '位置信息不可用';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '获取位置超时';
+                            break;
+                    }
+                    resultDiv.innerHTML = `<div class="error"><strong>位置获取失败:</strong> ${errorMessage}</div>`;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 600000
+                }
+            );
+        }
+
+        // 请求位置权限
+        function requestLocationPermission() {
+            const resultDiv = document.getElementById('locationResult');
+            
+            if (!('permissions' in navigator)) {
+                resultDiv.innerHTML = '<div class="error">浏览器不支持权限 API</div>';
+                return;
+            }
+
+            navigator.permissions.query({ name: 'geolocation' })
+                .then((result) => {
+                    resultDiv.innerHTML = `
+                        <div class="info">
+                            <strong>地理位置权限状态:</strong> ${result.state}<br>
+                            ${result.state === 'prompt' ? '需要用户授权' : result.state === 'granted' ? '已授权' : '已拒绝'}
+                        </div>
+                    `;
+                    
+                    if (result.state === 'prompt') {
+                        testGeolocation(); // 触发权限请求
+                    }
+                })
+                .catch((error) => {
+                    resultDiv.innerHTML = `<div class="error">权限查询失败: ${error.message}</div>`;
+                });
+        }
+
+        // 测试直接 WeatherAPI
+        async function testDirectAPI() {
+            const resultDiv = document.getElementById('weatherResult');
+            resultDiv.innerHTML = '<div class="info">正在测试直接 WeatherAPI...</div>';
+            
+            try {
+                const response = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=Beijing&days=3`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ 直接 WeatherAPI 测试成功!</strong><br>
+                            位置: ${data.location.name}, ${data.location.country}<br>
+                            温度: ${data.current.temp_c}°C<br>
+                            天气: ${data.current.condition.text}<br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>❌ 直接 WeatherAPI 测试失败</strong><br>
+                            状态: ${response.status}<br>
+                            错误: ${data.error?.message || '未知错误'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error"><strong>网络错误:</strong> ${error.message}</div>`;
+            }
+        }
+
+        // 测试 Vercel API 路由
+        async function testVercelAPI() {
+            const resultDiv = document.getElementById('weatherResult');
+            resultDiv.innerHTML = '<div class="info">正在测试 Vercel API 路由...</div>';
+            
+            try {
+                const response = await fetch(`${VERCEL_API_URL}?location=Beijing`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ Vercel API 路由测试成功!</strong><br>
+                            位置: ${data.location.name}, ${data.location.country}<br>
+                            温度: ${data.current.temp_c}°C<br>
+                            天气: ${data.current.condition.text}<br>
+                            ${data.cached ? `🔄 缓存数据 (${data.cacheAge}秒前)` : '🆕 新鲜数据'}
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>❌ Vercel API 路由测试失败</strong><br>
+                            状态: ${response.status}<br>
+                            错误: ${data.error || '未知错误'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error"><strong>网络错误:</strong> ${error.message}</div>`;
+            }
+        }
+
+        // 测试本地 API（在开发模式下）
+        async function testLocalAPI() {
+            const resultDiv = document.getElementById('weatherResult');
+            resultDiv.innerHTML = '<div class="info">正在测试本地 API...</div>';
+            
+            try {
+                const response = await fetch(`/api/weather?location=Beijing`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ 本地 API 测试成功!</strong><br>
+                            位置: ${data.location.name}, ${data.location.country}<br>
+                            温度: ${data.current.temp_c}°C<br>
+                            天气: ${data.current.condition.text}<br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>❌ 本地 API 测试失败</strong><br>
+                            状态: ${response.status}<br>
+                            错误: ${data.error || '未知错误'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error"><strong>网络错误:</strong> ${error.message}</div>`;
+            }
+        }
+
+        // 根据坐标测试天气
+        async function testWeatherByCoords(lat, lon) {
+            const resultDiv = document.getElementById('weatherResult');
+            resultDiv.innerHTML = '<div class="info">正在用坐标测试天气...</div>';
+            
+            try {
+                const response = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=3`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ 坐标天气测试成功!</strong><br>
+                            位置: ${data.location.name}, ${data.location.country}<br>
+                            温度: ${data.current.temp_c}°C<br>
+                            天气: ${data.current.condition.text}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>❌ 坐标天气测试失败</strong><br>
+                            状态: ${response.status}<br>
+                            错误: ${data.error?.message || '未知错误'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error"><strong>网络错误:</strong> ${error.message}</div>`;
+            }
+        }
+
+        // 检查环境
+        function checkEnvironment() {
+            const resultDiv = document.getElementById('envResult');
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    <strong>环境变量检查:</strong><br>
+                    NODE_ENV: ${process.env.NODE_ENV || '未定义'}<br>
+                    REACT_APP_WEATHER_API_KEY: ${process.env.REACT_APP_WEATHER_API_KEY ? '已设置' : '未设置'}<br>
+                    <strong>浏览器信息:</strong><br>
+                    User Agent: ${navigator.userAgent}<br>
+                    语言: ${navigator.language}<br>
+                    在线状态: ${navigator.onLine ? '在线' : '离线'}
+                </div>
+            `;
+        }
+
+        // 页面加载时更新状态
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAppStatus();
+            
+            // 自动测试直接 API
+            setTimeout(() => {
+                testDirectAPI();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

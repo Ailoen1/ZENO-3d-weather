@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Weather API Test</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                // Test Vercel API route
+                const response = await fetch('https://3d-weather-codrops-main-wlh3kzx4w-ailoen1s-projects.vercel.app/api/weather?location=Beijing');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h2>Vercel API Route Test:</h2>
+                    <p>Status: ${response.status}</p>
+                    <p>Data: ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h2>API Error:</h2>
+                    <p>Error: ${error.message}</p>
+                    <p>This might be a CORS or authentication issue</p>
+                `;
+            }
+            
+            // Test direct WeatherAPI
+            try {
+                const directResponse = await fetch('https://api.weatherapi.com/v1/forecast.json?key=14b98029813d49acbc1101959251611&q=Beijing&days=3');
+                const directData = await directResponse.json();
+                
+                resultDiv.innerHTML += `
+                    <h2>Direct WeatherAPI Test:</h2>
+                    <p>Status: ${directResponse.status}</p>
+                    <p>Data: ${JSON.stringify(directData, null, 2)}</p>
+                `;
+            } catch (directError) {
+                resultDiv.innerHTML += `
+                    <h2>Direct API Error:</h2>
+                    <p>Error: ${directError.message}</p>
+                `;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>

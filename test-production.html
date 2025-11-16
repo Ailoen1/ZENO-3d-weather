@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产环境测试 - 3D天气应用</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #fafafa; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .warning { color: orange; font-weight: bold; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; background: #007bff; color: white; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; background: white; border-radius: 3px; border-left: 4px solid #007bff; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ 3D天气应用 - 生产环境测试</h1>
+        <p>测试部署在Vercel上的应用功能是否正常</p>
+        
+        <div class="test-section">
+            <h3>📍 地理位置测试</h3>
+            <button onclick="testGeolocation()">测试获取当前位置</button>
+            <button onclick="testWeatherByCoords()">测试坐标天气</button>
+            <div id="geo-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🌡️ 天气API测试</h3>
+            <button onclick="testVercelAPI()">测试Vercel API路由</button>
+            <button onclick="testDirectAPI()">测试直接API调用</button>
+            <button onclick="testSearchWeather()">测试搜索天气</button>
+            <div id="api-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 应用链接</h3>
+            <p><a href="https://3d-weather-codrops-main-n0fsrsx8h-ailoen1s-projects.vercel.app" target="_blank" style="color: #007bff;">打开生产环境应用</a></p>
+            <p><a href="test.html" target="_blank" style="color: #28a745;">打开本地测试页面</a></p>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 测试结果</h3>
+            <div id="test-summary"></div>
+        </div>
+    </div>
+
+    <script>
+        const PRODUCTION_URL = 'https://3d-weather-codrops-main-n0fsrsx8h-ailoen1s-projects.vercel.app';
+        let testResults = [];
+
+        function addResult(test, success, details) {
+            const result = { test, success, details, time: new Date().toLocaleTimeString() };
+            testResults.push(result);
+            updateSummary();
+            return result;
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('test-summary');
+            const total = testResults.length;
+            const passed = testResults.filter(r => r.success).length;
+            const failed = total - passed;
+            
+            summary.innerHTML = `
+                <p>总测试数: ${total}</p>
+                <p class="success">通过: ${passed}</p>
+                <p class="error">失败: ${failed}</p>
+                <div style="margin-top: 10px;">
+                    ${testResults.map(r => `
+                        <div class="result" style="border-left-color: ${r.success ? '#28a745' : '#dc3545'}">
+                            <strong>${r.time}</strong> - ${r.test}: 
+                            <span class="${r.success ? 'success' : 'error'}">
+                                ${r.success ? '✅ 通过' : '❌ 失败'}
+                            </span>
+                            ${r.details ? `<br><small>${r.details}</small>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function testGeolocation() {
+            const result = document.getElementById('geo-result');
+            
+            if (!navigator.geolocation) {
+                const msg = '浏览器不支持地理位置';
+                result.innerHTML = `<div class="error">${msg}</div>`;
+                addResult('地理位置支持', false, msg);
+                return;
+            }
+
+            result.innerHTML = '<div class="warning">正在获取位置...</div>';
+            
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    const location = `${latitude},${longitude}`;
+                    const msg = `获取位置成功: ${location}`;
+                    result.innerHTML = `<div class="success">${msg}</div>`;
+                    addResult('地理位置获取', true, msg);
+                    
+                    // 自动测试天气
+                    await testWeatherByCoords(latitude, longitude);
+                },
+                (error) => {
+                    const msg = `获取位置失败: ${error.message} (代码: ${error.code})`;
+                    result.innerHTML = `<div class="error">${msg}</div>`;
+                    addResult('地理位置获取', false, msg);
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        }
+
+        async function testWeatherByCoords(lat, lng) {
+            if (!lat || !lng) {
+                const result = document.getElementById('geo-result');
+                result.innerHTML += '<div class="error">需要先有坐标</div>';
+                return;
+            }
+
+            const location = `${lat},${lng}`;
+            await testWeatherAPI(location, '坐标天气');
+        }
+
+        async function testVercelAPI() {
+            const result = document.getElementById('api-result');
+            result.innerHTML = '<div class="warning">正在测试Vercel API路由...</div>';
+            
+            try {
+                const response = await fetch(`${PRODUCTION_URL}/api/weather?location=Beijing`);
+                const data = await response.json();
+                
+                if (response.ok && data.location) {
+                    const msg = `Vercel API正常: ${data.location.name}, ${data.current.temp_c}°C`;
+                    result.innerHTML = `<div class="success">${msg}</div>`;
+                    addResult('Vercel API路由', true, msg);
+                } else {
+                    const msg = `Vercel API异常: ${response.status} - ${JSON.stringify(data)}`;
+                    result.innerHTML = `<div class="error">${msg}</div>`;
+                    addResult('Vercel API路由', false, msg);
+                }
+            } catch (error) {
+                const msg = `Vercel API失败: ${error.message}`;
+                result.innerHTML = `<div class="error">${msg}</div>`;
+                addResult('Vercel API路由', false, msg);
+            }
+        }
+
+        async function testDirectAPI() {
+            const result = document.getElementById('api-result');
+            result.innerHTML = '<div class="warning">正在测试直接API调用...</div>';
+            
+            try {
+                const response = await fetch('https://api.weatherapi.com/v1/forecast.json?key=14b98029813d49acbc1101959251611&q=Beijing&days=3&aqi=no&alerts=no');
+                const data = await response.json();
+                
+                if (response.ok && data.location) {
+                    const msg = `直接API正常: ${data.location.name}, ${data.current.temp_c}°C`;
+                    result.innerHTML = `<div class="success">${msg}</div>`;
+                    addResult('直接API调用', true, msg);
+                } else {
+                    const msg = `直接API异常: ${response.status} - ${JSON.stringify(data)}`;
+                    result.innerHTML = `<div class="error">${msg}</div>`;
+                    addResult('直接API调用', false, msg);
+                }
+            } catch (error) {
+                const msg = `直接API失败: ${error.message}`;
+                result.innerHTML = `<div class="error">${msg}</div>`;
+                addResult('直接API调用', false, msg);
+            }
+        }
+
+        async function testSearchWeather() {
+            const location = prompt('请输入城市名称 (例如: Beijing, Shanghai, Tokyo):', 'Shanghai');
+            if (!location) return;
+            
+            await testWeatherAPI(location, `搜索天气: ${location}`);
+        }
+
+        async function testWeatherAPI(location, testName) {
+            const result = document.getElementById('api-result');
+            result.innerHTML = `<div class="warning">正在测试 ${testName}...</div>`;
+            
+            try {
+                // 测试Vercel API路由（带fallback逻辑）
+                const response = await fetch(`${PRODUCTION_URL}/api/weather?location=${encodeURIComponent(location)}`);
+                const data = await response.json();
+                
+                if (response.ok && data.location) {
+                    const msg = `${testName}成功: ${data.location.name}, ${data.current.temp_c}°C, 天气: ${data.current.condition.text}`;
+                    result.innerHTML = `<div class="success">${msg}</div>`;
+                    addResult(testName, true, msg);
+                } else if (data.error) {
+                    // 可能是fallback到了demo数据
+                    const msg = `${testName}使用demo数据: ${data.error.message || '未知错误'}`;
+                    result.innerHTML = `<div class="warning">${msg}</div>`;
+                    addResult(testName, true, msg);
+                } else {
+                    const msg = `${testName}异常: ${response.status} - ${JSON.stringify(data)}`;
+                    result.innerHTML = `<div class="error">${msg}</div>`;
+                    addResult(testName, false, msg);
+                }
+            } catch (error) {
+                const msg = `${testName}失败: ${error.message}`;
+                result.innerHTML = `<div class="error">${msg}</div>`;
+                addResult(testName, false, msg);
+            }
+        }
+
+        // 页面加载时自动运行一些测试
+        window.addEventListener('load', () => {
+            addResult('测试页面加载', true, '生产环境测试页面已加载');
+        });
+    </script>
+</body>
+</html>

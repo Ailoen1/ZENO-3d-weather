@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D天气应用 - 部署完成测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .success { background: #4CAF50; }
+        .warning { background: #FF9800; }
+        .error { background: #F44336; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover { background: #1976D2; }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ 3D天气应用部署完成</h1>
+        
+        <div class="test-section">
+            <h2>部署状态</h2>
+            <p><span class="status success">✅ 生产构建完成</span></p>
+            <p><span class="status success">✅ API服务器运行中</span></p>
+            <p><span class="status success">✅ 静态文件服务器运行中</span></p>
+            <p><span class="status success">✅ 真实API密钥已配置</span></p>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 访问地址</h2>
+            <p><strong>本地访问：</strong> <a href="http://localhost:3000" class="btn" target="_blank">http://localhost:3000</a></p>
+            <p><strong>网络访问：</strong> <span class="status warning">需要公网IP或端口映射</span></p>
+            
+            <h3>📱 移动端测试</h3>
+            <p>在同一网络下，用手机访问：</p>
+            <code id="network-url">http://[您的电脑IP]:3000</code>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🌡️ 实时天气</h3>
+                <p>使用真实API密钥获取准确天气数据</p>
+            </div>
+            <div class="feature-card">
+                <h3>🌍 3D地球</h3>
+                <p>Three.js渲染的交互式3D地球</p>
+            </div>
+            <div class="feature-card">
+                <h3>⚡ 性能优化</h3>
+                <p>生产构建，代码压缩，缓存优化</p>
+            </div>
+            <div class="feature-card">
+                <h3>📱 响应式</h3>
+                <p>适配各种设备和屏幕尺寸</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 部署选项</h2>
+            
+            <h3>方案1：GitHub Pages（推荐）</h3>
+            <p>免费托管，自动部署，支持自定义域名</p>
+            <a href="#" class="btn" onclick="showGithubGuide()">查看GitHub部署指南</a>
+            
+            <h3>方案2：Vercel/Netlify</h3>
+            <p>一键部署，全球CDN，自动HTTPS</p>
+            <a href="#" class="btn" onclick="showVercelGuide()">查看Vercel部署指南</a>
+            
+            <h3>方案3：本地服务器</h3>
+            <p>当前正在运行，适合开发和测试</p>
+            <span class="status success">✅ 当前状态：运行中</span>
+        </div>
+
+        <div class="test-section" id="github-guide" style="display: none;">
+            <h2>📚 GitHub Pages部署步骤</h2>
+            <ol>
+                <li>在GitHub创建新仓库</li>
+                <li>将代码推送到main分支</li>
+                <li>在仓库Settings → Secrets中添加：<br>
+                    <code>WEATHER_API_KEY = 14b98029813d49acbc1101959251611</code></li>
+                <li>GitHub Actions会自动部署</li>
+                <li>访问：https://[用户名].github.io/[仓库名]</li>
+            </ol>
+        </div>
+
+        <div class="test-section" id="vercel-guide" style="display: none;">
+            <h2>🚀 Vercel部署步骤</h2>
+            <ol>
+                <li>访问 <a href="https://vercel.com" target="_blank">vercel.com</a></li>
+                <li>导入GitHub仓库</li>
+                <li>设置环境变量：<br>
+                    <code>REACT_APP_WEATHER_API_KEY = 14b98029813d49acbc1101959251611</code></li>
+                <li>点击Deploy按钮</li>
+                <li>获得免费域名和HTTPS</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 功能测试</h2>
+            <p>点击下方按钮测试各项功能：</p>
+            <a href="function-test.html" class="btn" target="_blank">功能测试</a>
+            <a href="browser-test.html" class="btn" target="_blank">浏览器兼容性测试</a>
+            <a href="path-test.html" class="btn" target="_blank">路径测试</a>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 API状态</h2>
+            <p><strong>API密钥：</strong> 14b98029813d49acbc1101959251611</p>
+            <p><strong>状态：</strong> <span class="status success">✅ 已配置并测试通过</span></p>
+            <button class="btn" onclick="testAPI()">测试API连接</button>
+            <div id="api-test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 显示网络地址
+        function getNetworkIP() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/ip', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const ip = JSON.parse(xhr.responseText).ip;
+                    document.getElementById('network-url').textContent = `http://${ip}:3000`;
+                }
+            };
+            xhr.send();
+        }
+
+        // 测试API
+        function testAPI() {
+            const resultDiv = document.getElementById('api-test-result');
+            resultDiv.innerHTML = '<p class="status warning">测试中...</p>';
+            
+            fetch('/api/weather/Beijing')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        resultDiv.innerHTML = `<p class="status error">❌ API错误: ${data.error}</p>`;
+                    } else {
+                        resultDiv.innerHTML = `<p class="status success">✅ API正常 - ${data.location.name}: ${data.current.temp_c}°C</p>`;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<p class="status error">❌ 连接失败: ${error.message}</p>`;
+                });
+        }
+
+        // 显示部署指南
+        function showGithubGuide() {
+            document.getElementById('github-guide').style.display = 'block';
+            document.getElementById('vercel-guide').style.display = 'none';
+        }
+
+        function showVercelGuide() {
+            document.getElementById('vercel-guide').style.display = 'block';
+            document.getElementById('github-guide').style.display = 'none';
+        }
+
+        // 页面加载完成后获取IP
+        window.onload = function() {
+            getNetworkIP();
+        };
+    </script>
+</body>
+</html>

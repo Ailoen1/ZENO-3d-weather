@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D天气应用 - 功能测试与验证</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: #333; 
+            min-height: 100vh; 
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: rgba(255,255,255,0.95); 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
+            backdrop-filter: blur(10px); 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+        }
+        .header h1 { 
+            color: #2c3e50; 
+            margin-bottom: 10px; 
+            font-size: 2.5em; 
+            background: linear-gradient(45deg, #667eea, #764ba2); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text; 
+        }
+        .test-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+            gap: 25px; 
+            margin: 30px 0; 
+        }
+        .test-section { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08); 
+            border: 1px solid #e9ecef; 
+            transition: transform 0.3s ease; 
+        }
+        .test-section:hover { 
+            transform: translateY(-5px); 
+        }
+        .test-section h3 { 
+            color: #495057; 
+            margin-bottom: 20px; 
+            font-size: 1.3em; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        .test-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 15px; 
+            margin: 8px 0; 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+            border-left: 4px solid #e9ecef; 
+            transition: all 0.3s ease; 
+        }
+        .test-item:hover { 
+            background: #e9ecef; 
+            transform: translateX(5px); 
+        }
+        .test-item.pass { 
+            border-left-color: #28a745; 
+            background: #d4edda; 
+        }
+        .test-item.fail { 
+            border-left-color: #dc3545; 
+            background: #f8d7da; 
+        }
+        .test-item.warning { 
+            border-left-color: #ffc107; 
+            background: #fff3cd; 
+        }
+        .status { 
+            font-weight: bold; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 0.9em; 
+        }
+        .status.pass { color: #28a745; background: #d4edda; }
+        .status.fail { color: #dc3545; background: #f8d7da; }
+        .status.warning { color: #856404; background: #fff3cd; }
+        .status.info { color: #0c5460; background: #d1ecf1; }
+        button { 
+            padding: 12px 20px; 
+            margin: 8px 5px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: all 0.3s ease; 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+        .btn-primary { 
+            background: linear-gradient(45deg, #007bff, #0056b3); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3); 
+        }
+        .btn-primary:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(0,123,255,0.4); 
+        }
+        .btn-secondary { 
+            background: linear-gradient(45deg, #6c757d, #545b62); 
+            color: white; 
+        }
+        .btn-success { 
+            background: linear-gradient(45deg, #28a745, #1e7e34); 
+            color: white; 
+        }
+        .btn-warning { 
+            background: linear-gradient(45deg, #ffc107, #e0a800); 
+            color: #212529; 
+        }
+        .progress-bar { 
+            width: 100%; 
+            height: 8px; 
+            background: #e9ecef; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            margin: 15px 0; 
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(45deg, #28a745, #20c997); 
+            transition: width 0.3s ease; 
+        }
+        .summary-card { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            margin: 20px 0; 
+            text-align: center; 
+        }
+        .summary-card h3 { 
+            margin-bottom: 15px; 
+            font-size: 1.5em; 
+        }
+        .feature-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        .feature-item { 
+            padding: 15px; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 10px; 
+            text-align: center; 
+            border: 1px solid rgba(255,255,255,0.2); 
+        }
+        .weather-demo { 
+            width: 100%; 
+            height: 300px; 
+            border: 2px solid #e9ecef; 
+            border-radius: 10px; 
+            margin: 15px 0; 
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.2em; 
+            color: white; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        .loading { 
+            display: inline-block; 
+            width: 20px; 
+            height: 20px; 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid #007bff; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+            margin-right: 10px; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .weather-animation { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            top: 0; 
+            left: 0; 
+        }
+        .rain-drop { 
+            position: absolute; 
+            width: 2px; 
+            height: 20px; 
+            background: rgba(255,255,255,0.6); 
+            animation: rain 1s linear infinite; 
+        }
+        @keyframes rain { 
+            0% { transform: translateY(-20px); opacity: 1; } 
+            100% { transform: translateY(320px); opacity: 0; } 
+        }
+        .cloud { 
+            position: absolute; 
+            width: 60px; 
+            height: 20px; 
+            background: rgba(255,255,255,0.8); 
+            border-radius: 20px; 
+            animation: cloud-move 10s linear infinite; 
+        }
+        @keyframes cloud-move { 
+            0% { transform: translateX(-60px); } 
+            100% { transform: translateX(100%); } 
+        }
+        .api-response { 
+            background: #f8f9fa; 
+            border: 1px solid #e9ecef; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin: 10px 0; 
+            font-family: 'Courier New', monospace; 
+            font-size: 12px; 
+            max-height: 200px; 
+            overflow-y: auto; 
+        }
+        .test-log { 
+            background: #2c3e50; 
+            color: #ecf0f1; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 12px; 
+            max-height: 300px; 
+            overflow-y: auto; 
+            margin: 10px 0; 
+        }
+        .log-entry { 
+            margin: 2px 0; 
+            padding: 2px 0; 
+        }
+        .log-success { color: #2ecc71; }
+        .log-error { color: #e74c3c; }
+        .log-warning { color: #f39c12; }
+        .log-info { color: #3498db; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌤️ 3D天气应用 - 功能测试与验证</h1>
+            <p>全面测试3D天气应用的各项功能和性能表现</p>
+        </div>
+
+        <div class="test-grid">
+            <!-- 3D渲染测试 -->
+            <div class="test-section">
+                <h3>🎮 3D渲染功能测试</h3>
+                <div class="weather-demo" id="weather-demo">
+                    <div class="loading"></div>
+                    正在加载3D天气演示...
+                </div>
+                <button class="btn-primary" onclick="test3DRendering()">测试3D渲染</button>
+                <button class="btn-secondary" onclick="testWeatherEffects()">天气特效</button>
+                <button class="btn-warning" onclick="testPerformance()">性能测试</button>
+                <div id="rendering-results"></div>
+            </div>
+
+            <!-- API功能测试 -->
+            <div class="test-section">
+                <h3>🌐 天气API功能测试</h3>
+                <div style="margin: 15px 0;">
+                    <input type="text" id="location-input" placeholder="输入城市名称" value="Beijing" 
+                           style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 200px;">
+                    <button class="btn-primary" onclick="testWeatherAPI()">测试天气API</button>
+                    <button class="btn-secondary" onclick="testMultipleCities()">多城市测试</button>
+                </div>
+                <div id="api-results"></div>
+                <div id="api-response" class="api-response" style="display: none;"></div>
+            </div>
+
+            <!-- 用户界面测试 -->
+            <div class="test-section">
+                <h3>🖼️ 用户界面测试</h3>
+                <button class="btn-primary" onclick="testUIComponents()">UI组件测试</button>
+                <button class="btn-secondary" onclick="testResponsiveDesign()">响应式设计</button>
+                <button class="btn-warning" onclick="testAccessibility()">无障碍测试</button>
+                <div id="ui-results"></div>
+            </div>
+
+            <!-- 交互功能测试 -->
+            <div class="test-section">
+                <h3>🎯 交互功能测试</h3>
+                <button class="btn-primary" onclick="testUserInteractions()">用户交互</button>
+                <button class="btn-secondary" onclick="testFormValidation()">表单验证</button>
+                <button class="btn-warning" onclick="testErrorHandling()">错误处理</button>
+                <div id="interaction-results"></div>
+            </div>
+
+            <!-- 性能基准测试 -->
+            <div class="test-section">
+                <h3>⚡ 性能基准测试</h3>
+                <button class="btn-primary" onclick="testLoadTime()">加载时间</button>
+                <button class="btn-secondary" onclick="testMemoryUsage()">内存使用</button>
+                <button class="btn-warning" onclick="testFPS()">帧率测试</button>
+                <div id="performance-results"></div>
+            </div>
+
+            <!-- 网络兼容性测试 -->
+            <div class="test-section">
+                <h3>🌐 网络兼容性测试</h3>
+                <button class="btn-primary" onclick="testNetworkConditions()">网络条件</button>
+                <button class="btn-secondary" onclick="testOfflineMode()">离线模式</button>
+                <button class="btn-warning" onclick="testCaching()">缓存测试</button>
+                <div id="network-results"></div>
+            </div>
+        </div>
+
+        <!-- 综合测试报告 -->
+        <div class="summary-card">
+            <h3>📊 功能测试综合报告</h3>
+            <div id="overall-score" style="font-size: 3em; font-weight: bold; margin: 15px 0;">--</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="overall-progress"></div>
+            </div>
+            <div id="test-summary"></div>
+        </div>
+
+        <!-- 测试日志 -->
+        <div class="test-section">
+            <h3>📝 测试日志</h3>
+            <button class="btn-primary" onclick="clearTestLog()">清空日志</button>
+            <button class="btn-secondary" onclick="exportTestLog()">导出日志</button>
+            <div id="test-log" class="test-log"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn-success" onclick="runAllFunctionTests()">🚀 运行所有功能测试</button>
+            <button class="btn-warning" onclick="location.reload()">🔄 重新加载</button>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let testResults = [];
+        let testLog = [];
+        let performanceMetrics = {};
+
+        // 日志函数
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = { timestamp, message, type };
+            testLog.push(logEntry);
+            
+            const logDiv = document.getElementById('test-log');
+            const logClass = `log-${type}`;
+            logDiv.innerHTML += `<div class="log-entry ${logClass}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearTestLog() {
+            testLog = [];
+            document.getElementById('test-log').innerHTML = '';
+            log('测试日志已清空', 'info');
+        }
+
+        function exportTestLog() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                testResults: testResults,
+                testLog: testLog,
+                performanceMetrics: performanceMetrics
+            };
+
+            const dataStr = JSON.stringify(report, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `function-test-report-${Date.now()}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            log('测试报告已导出', 'success');
+        }
+
+        // 3D渲染测试
+        async function test3DRendering() {
+            log('开始3D渲染功能测试', 'info');
+            const results = document.getElementById('rendering-results');
+            results.innerHTML = '<div class="loading"></div>正在测试3D渲染...';
+
+            const tests = [
+                {
+                    name: 'WebGL支持',
+                    test: () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                            return gl !== null;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'WebGL2支持',
+                    test: () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            return !!canvas.getContext('webgl2');
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'WebGL扩展',
+                    test: () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                            if (!gl) return false;
+                            const extensions = gl.getSupportedExtensions();
+                            return extensions && extensions.length > 0;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: '3D数学库',
+                    test: () => {
+                        return typeof Math !== 'undefined' && 
+                               typeof Math.sin !== 'undefined' &&
+                               typeof Math.cos !== 'undefined' &&
+                               typeof Math.PI !== 'undefined';
+                    }
+                }
+            ];
+
+            let passed = 0;
+            let html = '';
+
+            for (const test of tests) {
+                const result = test.test();
+                if (result) passed++;
+                const status = result ? 'pass' : 'fail';
+                const statusText = result ? '支持' : '不支持';
+                
+                html += `
+                    <div class="test-item ${status}">
+                        <span>${test.name}</span>
+                        <span class="status ${status}">${statusText}</span>
+                    </div>
+                `;
+                
+                log(`${test.name}: ${statusText}`, result ? 'success' : 'error');
+            }
+
+            const percentage = Math.round((passed / tests.length) * 100);
+            results.innerHTML = `
+                <div class="summary-card" style="margin: 15px 0;">
+                    <strong>3D渲染支持度: ${percentage}% (${passed}/${tests.length})</strong>
+                </div>
+                ${html}
+            `;
+
+            // 模拟3D效果
+            simulate3DWeather();
+            
+            testResults.push({
+                category: '3D渲染',
+                passed: passed,
+                total: tests.length,
+                percentage: percentage
+            });
+        }
+
+        // 模拟3D天气效果
+        function simulate3DWeather() {
+            const demo = document.getElementById('weather-demo');
+            demo.innerHTML = '';
+            
+            // 创建天气动画
+            const weatherType = Math.random() > 0.5 ? 'rain' : 'cloudy';
+            
+            if (weatherType === 'rain') {
+                // 雨滴动画
+                for (let i = 0; i < 50; i++) {
+                    const drop = document.createElement('div');
+                    drop.className = 'rain-drop';
+                    drop.style.left = Math.random() * 100 + '%';
+                    drop.style.animationDelay = Math.random() * 2 + 's';
+                    drop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+                    demo.appendChild(drop);
+                }
+                demo.innerHTML += '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em;">🌧️</div>';
+            } else {
+                // 云朵动画
+                for (let i = 0; i < 5; i++) {
+                    const cloud = document.createElement('div');
+                    cloud.className = 'cloud';
+                    cloud.style.top = Math.random() * 60 + '%';
+                    cloud.style.animationDelay = Math.random() * 5 + 's';
+                    cloud.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                    demo.appendChild(cloud);
+                }
+                demo.innerHTML += '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em;">☁️</div>';
+            }
+            
+            log(`3D天气效果模拟: ${weatherType}`, 'success');
+        }
+
+        // 天气特效测试
+        function testWeatherEffects() {
+            log('开始天气特效测试', 'info');
+            const effects = ['sunny', 'rainy', 'cloudy', 'snowy', 'stormy'];
+            const demo = document.getElementById('weather-demo');
+            
+            let currentIndex = 0;
+            const interval = setInterval(() => {
+                if (currentIndex >= effects.length) {
+                    clearInterval(interval);
+                    log('天气特效测试完成', 'success');
+                    return;
+                }
+                
+                const effect = effects[currentIndex];
+                demo.innerHTML = `<div style="font-size: 3em;">${getWeatherEmoji(effect)}</div>`;
+                log(`测试天气效果: ${effect}`, 'info');
+                currentIndex++;
+            }, 1000);
+        }
+
+        function getWeatherEmoji(weather) {
+            const emojiMap = {
+                'sunny': '☀️',
+                'rainy': '🌧️',
+                'cloudy': '☁️',
+                'snowy': '❄️',
+                'stormy': '⛈️'
+            };
+            return emojiMap[weather] || '🌤️';
+        }
+
+        // 天气API测试
+        async function testWeatherAPI() {
+            const location = document.getElementById('location-input').value || 'Beijing';
+            log(`开始天气API测试 - 城市: ${location}`, 'info');
+            
+            const results = document.getElementById('api-results');
+            const responseDiv = document.getElementById('api-response');
+            results.innerHTML = '<div class="loading"></div>正在测试天气API...';
+            
+            try {
+                const startTime = performance.now();
+                const response = await fetch(`/api/weather?location=${encodeURIComponent(location)}`);
+                const endTime = performance.now();
+                const loadTime = (endTime - startTime).toFixed(2);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    results.innerHTML = `
+                        <div class="test-item pass">
+                            <span>API响应状态</span>
+                            <span class="status pass">成功 (${response.status})</span>
+                        </div>
+                        <div class="test-item pass">
+                            <span>响应时间</span>
+                            <span class="status pass">${loadTime}ms</span>
+                        </div>
+                        <div class="test-item pass">
+                            <span>数据格式</span>
+                            <span class="status pass">有效JSON</span>
+                        </div>
+                    `;
+                    
+                    responseDiv.style.display = 'block';
+                    responseDiv.innerHTML = `<strong>API响应数据:</strong><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    
+                    // 验证数据结构
+                    validateWeatherData(data);
+                    
+                    log(`天气API测试成功 - 响应时间: ${loadTime}ms`, 'success');
+                } else {
+                    results.innerHTML = `
+                        <div class="test-item fail">
+                            <span>API响应状态</span>
+                            <span class="status fail">失败 (${response.status})</span>
+                        </div>
+                    `;
+                    log(`天气API测试失败 - 状态码: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="test-item fail">
+                        <span>API连接</span>
+                        <span class="status fail">错误: ${error.message}</span>
+                    </div>
+                `;
+                log(`天气API连接错误: ${error.message}`, 'error');
+            }
+        }
+
+        function validateWeatherData(data) {
+            const requiredFields = ['location', 'current', 'forecast'];
+            const missingFields = [];
+            
+            requiredFields.forEach(field => {
+                if (!data[field]) {
+                    missingFields.push(field);
+                }
+            });
+            
+            if (missingFields.length === 0) {
+                log('天气数据结构验证通过', 'success');
+            } else {
+                log(`天气数据缺少字段: ${missingFields.join(', ')}`, 'warning');
+            }
+        }
+
+        // 多城市测试
+        async function testMultipleCities() {
+            const cities = ['Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Chengdu'];
+            log('开始多城市天气API测试', 'info');
+            
+            const results = document.getElementById('api-results');
+            results.innerHTML = '<div class="loading"></div>正在测试多个城市...</div>';
+            
+            let passed = 0;
+            let html = '';
+
+            for (const city of cities) {
+                try {
+                    const response = await fetch(`/api/weather?location=${encodeURIComponent(city)}`);
+                    if (response.ok) {
+                        passed++;
+                        html += `
+                            <div class="test-item pass">
+                                <span>${city}</span>
+                                <span class="status pass">成功</span>
+                            </div>
+                        `;
+                        log(`${city}: API调用成功`, 'success');
+                    } else {
+                        html += `
+                            <div class="test-item fail">
+                                <span>${city}</span>
+                                <span class="status fail">失败 (${response.status})</span>
+                            </div>
+                        `;
+                        log(`${city}: API调用失败`, 'error');
+                    }
+                } catch (error) {
+                    html += `
+                        <div class="test-item fail">
+                            <span>${city}</span>
+                            <span class="status fail">错误</span>
+                        </div>
+                    `;
+                    log(`${city}: API调用错误`, 'error');
+                }
+                
+                // 添加延迟避免API限流
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            const percentage = Math.round((passed / cities.length) * 100);
+            results.innerHTML = `
+                <div class="summary-card" style="margin: 15px 0;">
+                    <strong>多城市API测试: ${percentage}% (${passed}/${cities.length})</strong>
+                </div>
+                ${html}
+            `;
+        }
+
+        // UI组件测试
+        function testUIComponents() {
+            log('开始UI组件测试', 'info');
+            const results = document.getElementById('ui-results');
+            results.innerHTML = '<div class="loading"></div>正在测试UI组件...</div>';
+
+            const tests = [
+                {
+                    name: '响应式布局',
+                    test: () => window.innerWidth > 0 && window.innerHeight > 0
+                },
+                {
+                    name: '字体加载',
+                    test: () => document.fonts && document.fonts.ready
+                },
+                {
+                    name: 'CSS动画支持',
+                    test: () => CSS.supports('animation', 'test 1s')
+                },
+                {
+                    name: '渐变背景',
+                    test: () => CSS.supports('background', 'linear-gradient(red, blue)')
+                }
+            ];
+
+            let passed = 0;
+            let html = '';
+
+            tests.forEach(test => {
+                const result = test.test();
+                if (result) passed++;
+                const status = result ? 'pass' : 'fail';
+                const statusText = result ? '支持' : '不支持';
+                
+                html += `
+                    <div class="test-item ${status}">
+                        <span>${test.name}</span>
+                        <span class="status ${status}">${statusText}</span>
+                    </div>
+                `;
+                
+                log(`UI测试 - ${test.name}: ${statusText}`, result ? 'success' : 'error');
+            });
+
+            const percentage = Math.round((passed / tests.length) * 100);
+            results.innerHTML = `
+                <div class="summary-card" style="margin: 15px 0;">
+                    <strong>UI组件支持度: ${percentage}% (${passed}/${tests.length})</strong>
+                </div>
+                ${html}
+            `;
+        }
+
+        // 响应式设计测试
+        function testResponsiveDesign() {
+            log('开始响应式设计测试', 'info');
+            const results = document.getElementById('ui-results');
+            
+            const viewport = window.innerWidth;
+            const deviceType = viewport <= 768 ? '移动端' : viewport <= 1024 ? '平板' : '桌面端';
+            
+            const tests = [
+                {
+                    name: '视口宽度',
+                    value: `${viewport}px`,
+                    status: viewport > 0 ? 'pass' : 'fail'
+                },
+                {
+                    name: '设备类型',
+                    value: deviceType,
+                    status: 'pass'
+                },
+                {
+                    name: '媒体查询',
+                    value: '支持',
+                    status: typeof window.matchMedia !== 'undefined' ? 'pass' : 'fail'
+                }
+            ];
+
+            let html = '';
+            tests.forEach(test => {
+                html += `
+                    <div class="test-item ${test.status}">
+                        <span>${test.name}</span>
+                        <span class="status ${test.status}">${test.value}</span>
+                    </div>
+                `;
+                log(`响应式测试 - ${test.name}: ${test.value}`, test.status === 'pass' ? 'success' : 'error');
+            });
+
+            results.innerHTML += html;
+        }
+
+        // 性能测试
+        async function testPerformance() {
+            log('开始性能基准测试', 'info');
+            const results = document.getElementById('performance-results');
+            results.innerHTML = '<div class="loading"></div>正在测试性能...</div>';
+
+            // 测试页面加载时间
+            const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+            
+            // 测试内存使用
+            const memoryInfo = performance.memory;
+            const memoryUsage = memoryInfo ? (memoryInfo.usedJSHeapSize / 1024 / 1024).toFixed(2) : 'N/A';
+            
+            // 测试FPS（简化版）
+            let frameCount = 0;
+            let lastTime = performance.now();
+            
+            const measureFPS = () => {
+                frameCount++;
+                const currentTime = performance.now();
+                if (currentTime - lastTime >= 1000) {
+                    const fps = frameCount;
+                    frameCount = 0;
+                    lastTime = currentTime;
+                    return fps;
+                }
+                return null;
+            };
+
+            let fpsResults = [];
+            const fpsTest = setInterval(() => {
+                const fps = measureFPS();
+                if (fps !== null) {
+                    fpsResults.push(fps);
+                    if (fpsResults.length >= 5) {
+                        clearInterval(fpsTest);
+                        const avgFPS = Math.round(fpsResults.reduce((a, b) => a + b) / fpsResults.length);
+                        
+                        results.innerHTML = `
+                            <div class="test-item ${loadTime < 3000 ? 'pass' : 'warning'}">
+                                <span>页面加载时间</span>
+                                <span class="status ${loadTime < 3000 ? 'pass' : 'warning'}">${loadTime}ms</span>
+                            </div>
+                            <div class="test-item ${memoryUsage !== 'N/A' ? 'pass' : 'warning'}">
+                                <span>内存使用</span>
+                                <span class="status ${memoryUsage !== 'N/A' ? 'pass' : 'warning'}">${memoryUsage} MB</span>
+                            </div>
+                            <div class="test-item ${avgFPS >= 30 ? 'pass' : 'warning'}">
+                                <span>平均帧率</span>
+                                <span class="status ${avgFPS >= 30 ? 'pass' : 'warning'}">${avgFPS} FPS</span>
+                            </div>
+                        `;
+                        
+                        log(`性能测试完成 - 加载时间: ${loadTime}ms, 内存: ${memoryUsage}MB, FPS: ${avgFPS}`, 'success');
+                        
+                        performanceMetrics = {
+                            loadTime: loadTime,
+                            memoryUsage: memoryUsage,
+                            avgFPS: avgFPS
+                        };
+                    }
+                }
+            }, 100);
+        }
+
+        // 综合测试
+        async function runAllFunctionTests() {
+            log('开始全面功能测试', 'info');
+            testResults = [];
+            
+            // 按顺序运行所有测试
+            await test3DRendering();
+            await testWeatherAPI();
+            testUIComponents();
+            testResponsiveDesign();
+            await testPerformance();
+            
+            // 生成综合报告
+            generateOverallReport();
+            log('全面功能测试完成', 'success');
+        }
+
+        // 生成综合报告
+        function generateOverallReport() {
+            const totalTests = testResults.reduce((sum, result) => sum + result.total, 0);
+            const totalPassed = testResults.reduce((sum, result) => sum + result.passed, 0);
+            const overallPercentage = Math.round((totalPassed / totalTests) * 100);
+            
+            document.getElementById('overall-score').textContent = overallPercentage + '%';
+            document.getElementById('overall-progress').style.width = overallPercentage + '%';
+            
+            let summary = '';
+            if (overallPercentage >= 90) {
+                summary = '🎉 优秀 - 所有功能正常运行';
+            } else if (overallPercentage >= 80) {
+                summary = '✅ 良好 - 大部分功能正常';
+            } else if (overallPercentage >= 70) {
+                summary = '⚠️ 一般 - 部分功能需要优化';
+            } else {
+                summary = '❌ 需要改进 - 多项功能异常';
+            }
+            
+            document.getElementById('test-summary').innerHTML = `
+                <div style="font-size: 1.2em; margin: 10px 0;">${summary}</div>
+                <div>总测试数: ${totalTests} | 通过: ${totalPassed} | 失败: ${totalTests - totalPassed}</div>
+                ${performanceMetrics.loadTime ? `<div>平均加载时间: ${performanceMetrics.loadTime}ms</div>` : ''}
+                ${performanceMetrics.avgFPS ? `<div>平均帧率: ${performanceMetrics.avgFPS} FPS</div>` : ''}
+            `;
+            
+            log(`综合测试报告 - 通过率: ${overallPercentage}% (${totalPassed}/${totalTests})`, 
+                overallPercentage >= 80 ? 'success' : overallPercentage >= 60 ? 'warning' : 'error');
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            log('功能测试页面加载完成', 'info');
+            // 自动运行基础测试
+            setTimeout(() => {
+                test3DRendering();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

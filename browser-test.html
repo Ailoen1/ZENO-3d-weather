@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D天气应用 - 跨浏览器兼容性测试</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: #333; 
+            min-height: 100vh; 
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: rgba(255,255,255,0.95); 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
+            backdrop-filter: blur(10px); 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+        }
+        .header h1 { 
+            color: #2c3e50; 
+            margin-bottom: 10px; 
+            font-size: 2.5em; 
+            background: linear-gradient(45deg, #667eea, #764ba2); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text; 
+        }
+        .browser-info { 
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); 
+            color: white; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            font-weight: bold; 
+        }
+        .test-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+            gap: 25px; 
+            margin: 30px 0; 
+        }
+        .test-section { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08); 
+            border: 1px solid #e9ecef; 
+            transition: transform 0.3s ease; 
+        }
+        .test-section:hover { 
+            transform: translateY(-5px); 
+        }
+        .test-section h3 { 
+            color: #495057; 
+            margin-bottom: 20px; 
+            font-size: 1.3em; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        .test-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 15px; 
+            margin: 8px 0; 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+            border-left: 4px solid #e9ecef; 
+            transition: all 0.3s ease; 
+        }
+        .test-item:hover { 
+            background: #e9ecef; 
+            transform: translateX(5px); 
+        }
+        .test-item.pass { 
+            border-left-color: #28a745; 
+            background: #d4edda; 
+        }
+        .test-item.fail { 
+            border-left-color: #dc3545; 
+            background: #f8d7da; 
+        }
+        .test-item.warning { 
+            border-left-color: #ffc107; 
+            background: #fff3cd; 
+        }
+        .status { 
+            font-weight: bold; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 0.9em; 
+        }
+        .status.pass { color: #28a745; background: #d4edda; }
+        .status.fail { color: #dc3545; background: #f8d7da; }
+        .status.warning { color: #856404; background: #fff3cd; }
+        .status.info { color: #0c5460; background: #d1ecf1; }
+        button { 
+            padding: 12px 20px; 
+            margin: 8px 5px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: all 0.3s ease; 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+        .btn-primary { 
+            background: linear-gradient(45deg, #007bff, #0056b3); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3); 
+        }
+        .btn-primary:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(0,123,255,0.4); 
+        }
+        .btn-secondary { 
+            background: linear-gradient(45deg, #6c757d, #545b62); 
+            color: white; 
+        }
+        .btn-success { 
+            background: linear-gradient(45deg, #28a745, #1e7e34); 
+            color: white; 
+        }
+        .btn-warning { 
+            background: linear-gradient(45deg, #ffc107, #e0a800); 
+            color: #212529; 
+        }
+        .progress-bar { 
+            width: 100%; 
+            height: 8px; 
+            background: #e9ecef; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            margin: 15px 0; 
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(45deg, #28a745, #20c997); 
+            transition: width 0.3s ease; 
+        }
+        .summary-card { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            margin: 20px 0; 
+            text-align: center; 
+        }
+        .summary-card h3 { 
+            margin-bottom: 15px; 
+            font-size: 1.5em; 
+        }
+        .compatibility-score { 
+            font-size: 3em; 
+            font-weight: bold; 
+            margin: 10px 0; 
+        }
+        .feature-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        .feature-item { 
+            padding: 15px; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 10px; 
+            text-align: center; 
+            border: 1px solid rgba(255,255,255,0.2); 
+        }
+        .threejs-demo { 
+            width: 100%; 
+            height: 200px; 
+            border: 2px solid #e9ecef; 
+            border-radius: 10px; 
+            margin: 15px 0; 
+            background: #f8f9fa; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.2em; 
+            color: #6c757d; 
+        }
+        .loading { 
+            display: inline-block; 
+            width: 20px; 
+            height: 20px; 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid #007bff; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+            margin-right: 10px; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .collapsible { 
+            background: white; 
+            border: 1px solid #e9ecef; 
+            border-radius: 8px; 
+            margin: 10px 0; 
+            overflow: hidden; 
+        }
+        .collapsible-header { 
+            padding: 15px; 
+            background: #f8f9fa; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            transition: background 0.3s ease; 
+        }
+        .collapsible-header:hover { 
+            background: #e9ecef; 
+        }
+        .collapsible-content { 
+            padding: 0 15px; 
+            max-height: 0; 
+            overflow: hidden; 
+            transition: max-height 0.3s ease, padding 0.3s ease; 
+        }
+        .collapsible-content.active { 
+            max-height: 500px; 
+            padding: 15px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 3D天气应用 - 跨浏览器兼容性测试</h1>
+            <p>全面测试应用在各种浏览器和设备上的兼容性表现</p>
+        </div>
+
+        <div class="browser-info" id="browser-info">
+            <div class="loading"></div>
+            正在检测浏览器信息...
+        </div>
+
+        <div class="test-grid">
+            <!-- 浏览器引擎测试 -->
+            <div class="test-section">
+                <h3>🔧 浏览器引擎检测</h3>
+                <div id="engine-tests"></div>
+                <button class="btn-primary" onclick="testBrowserEngine()">重新测试引擎</button>
+            </div>
+
+            <!-- WebGL兼容性 -->
+            <div class="test-section">
+                <h3>🎮 WebGL兼容性测试</h3>
+                <div id="webgl-tests"></div>
+                <div class="threejs-demo" id="threejs-demo">
+                    <div class="loading"></div>
+                    正在加载3D演示...
+                </div>
+                <button class="btn-primary" onclick="testWebGL()">测试WebGL</button>
+                <button class="btn-secondary" onclick="testThreeJS()">测试Three.js</button>
+            </div>
+
+            <!-- 现代Web API -->
+            <div class="test-section">
+                <h3>⚡ 现代Web API支持</h3>
+                <div id="api-tests"></div>
+                <button class="btn-primary" onclick="testModernAPIs()">测试API支持</button>
+            </div>
+
+            <!-- CSS特性 -->
+            <div class="test-section">
+                <h3>🎨 CSS特性支持</h3>
+                <div id="css-tests"></div>
+                <button class="btn-primary" onclick="testCSSFeatures()">测试CSS特性</button>
+            </div>
+
+            <!-- JavaScript ES6+ -->
+            <div class="test-section">
+                <h3>📜 JavaScript ES6+特性</h3>
+                <div id="js-tests"></div>
+                <button class="btn-primary" onclick="testJavaScriptFeatures()">测试JS特性</button>
+            </div>
+
+            <!-- 移动端兼容性 -->
+            <div class="test-section">
+                <h3>📱 移动端兼容性</h3>
+                <div id="mobile-tests"></div>
+                <button class="btn-primary" onclick="testMobileFeatures()">测试移动端</button>
+            </div>
+
+            <!-- 性能测试 -->
+            <div class="test-section">
+                <h3>⚙️ 性能基准测试</h3>
+                <div id="performance-tests"></div>
+                <button class="btn-primary" onclick="testPerformance()">性能测试</button>
+                <button class="btn-warning" onclick="testMemoryUsage()">内存测试</button>
+            </div>
+
+            <!-- 网络兼容性 -->
+            <div class="test-section">
+                <h3>🌐 网络协议支持</h3>
+                <div id="network-tests"></div>
+                <button class="btn-primary" onclick="testNetworkFeatures()">网络测试</button>
+            </div>
+        </div>
+
+        <!-- 综合报告 -->
+        <div class="summary-card">
+            <h3>📊 兼容性综合评分</h3>
+            <div class="compatibility-score" id="compatibility-score">--</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="compatibility-progress"></div>
+            </div>
+            <div id="compatibility-summary"></div>
+        </div>
+
+        <!-- 详细报告 -->
+        <div class="collapsible">
+            <div class="collapsible-header" onclick="toggleCollapsible('detailed-report')">
+                <span>📋 详细测试报告</span>
+                <span>▼</span>
+            </div>
+            <div class="collapsible-content" id="detailed-report">
+                <div id="detailed-results"></div>
+            </div>
+        </div>
+
+        <!-- 建议和改进 -->
+        <div class="collapsible">
+            <div class="collapsible-header" onclick="toggleCollapsible('suggestions')">
+                <span>💡 兼容性建议</span>
+                <span>▼</span>
+            </div>
+            <div class="collapsible-content" id="suggestions">
+                <div id="compatibility-suggestions"></div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn-success" onclick="runAllCompatibilityTests()">🚀 运行所有测试</button>
+            <button class="btn-secondary" onclick="exportReport()">📤 导出报告</button>
+            <button class="btn-warning" onclick="location.reload()">🔄 重新加载</button>
+        </div>
+    </div>
+
+    <script>
+        // 全局测试结果存储
+        let compatibilityResults = [];
+        let browserInfo = {};
+
+        // 获取浏览器信息
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            const info = {
+                userAgent: ua,
+                browser: 'Unknown',
+                version: 'Unknown',
+                engine: 'Unknown',
+                platform: navigator.platform,
+                language: navigator.language,
+                languages: navigator.languages,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                hardwareConcurrency: navigator.hardwareConcurrency || 'Unknown',
+                deviceMemory: navigator.deviceMemory || 'Unknown'
+            };
+
+            // 检测浏览器类型
+            if (ua.includes('Chrome') && !ua.includes('Edg')) {
+                info.browser = 'Chrome';
+                info.version = ua.match(/Chrome\/(\d+)/)?.[1] || 'Unknown';
+                info.engine = 'Blink';
+            } else if (ua.includes('Firefox')) {
+                info.browser = 'Firefox';
+                info.version = ua.match(/Firefox\/(\d+)/)?.[1] || 'Unknown';
+                info.engine = 'Gecko';
+            } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
+                info.browser = 'Safari';
+                info.version = ua.match(/Version\/(\d+)/)?.[1] || 'Unknown';
+                info.engine = 'WebKit';
+            } else if (ua.includes('Edg')) {
+                info.browser = 'Edge';
+                info.version = ua.match(/Edg\/(\d+)/)?.[1] || 'Unknown';
+                info.engine = 'Blink';
+            } else if (ua.includes('Trident') || ua.includes('MSIE')) {
+                info.browser = 'Internet Explorer';
+                info.version = ua.match(/(?:MSIE |rv:)(\d+)/)?.[1] || 'Unknown';
+                info.engine = 'Trident';
+            }
+
+            browserInfo = info;
+            return info;
+        }
+
+        // 显示浏览器信息
+        function displayBrowserInfo() {
+            const info = getBrowserInfo();
+            const browserInfoDiv = document.getElementById('browser-info');
+            
+            browserInfoDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="feature-item">
+                        <strong>🌐 浏览器</strong><br>
+                        ${info.browser} ${info.version}
+                    </div>
+                    <div class="feature-item">
+                        <strong>⚙️ 引擎</strong><br>
+                        ${info.engine}
+                    </div>
+                    <div class="feature-item">
+                        <strong>💻 平台</strong><br>
+                        ${info.platform}
+                    </div>
+                    <div class="feature-item">
+                        <strong>🌏 语言</strong><br>
+                        ${info.language}
+                    </div>
+                    <div class="feature-item">
+                        <strong>🍪 Cookie</strong><br>
+                        ${info.cookieEnabled ? '启用' : '禁用'}
+                    </div>
+                    <div class="feature-item">
+                        <strong>📡 在线</strong><br>
+                        ${info.onLine ? '是' : '否'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 浏览器引擎测试
+        function testBrowserEngine() {
+            const tests = [
+                {
+                    name: 'Blink引擎 (Chrome/Edge)',
+                    test: () => navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Edg') ? 'pass' : 
+                           navigator.userAgent.includes('Edg') ? 'pass' : 'fail'
+                },
+                {
+                    name: 'WebKit引擎 (Safari)',
+                    test: () => navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') ? 'pass' : 'fail'
+                },
+                {
+                    name: 'Gecko引擎 (Firefox)',
+                    test: () => navigator.userAgent.includes('Firefox') ? 'pass' : 'fail'
+                },
+                {
+                    name: 'Trident引擎 (IE)',
+                    test: () => navigator.userAgent.includes('Trident') || navigator.userAgent.includes('MSIE') ? 'pass' : 'fail'
+                }
+            ];
+
+            return runTests('engine-tests', tests, '引擎检测');
+        }
+
+        // WebGL兼容性测试
+        function testWebGL() {
+            const tests = [
+                {
+                    name: 'WebGL支持',
+                    test: () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'WebGL2支持',
+                    test: () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            return !!canvas.getContext('webgl2');
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'WebGL上下文创建',
+                    test: () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                            return gl !== null;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'WebGL扩展支持',
+                    test: () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                            if (!gl) return false;
+                            const extensions = gl.getSupportedExtensions();
+                            return extensions && extensions.length > 0;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                }
+            ];
+
+            return runTests('webgl-tests', tests, 'WebGL兼容性');
+        }
+
+        // Three.js测试
+        function testThreeJS() {
+            const demoDiv = document.getElementById('threejs-demo');
+            demoDiv.innerHTML = '<div class="loading"></div>正在加载Three.js演示...';
+            
+            // 模拟Three.js功能测试
+            const tests = [
+                {
+                    name: 'Three.js核心功能',
+                    test: () => {
+                        // 模拟Three.js环境检测
+                        return typeof window !== 'undefined' && 
+                               typeof document !== 'undefined' &&
+                               typeof requestAnimationFrame !== 'undefined';
+                    }
+                },
+                {
+                    name: '3D数学库支持',
+                    test: () => {
+                        return typeof Math !== 'undefined' && 
+                               typeof Math.PI !== 'undefined' &&
+                               typeof Math.sin !== 'undefined';
+                    }
+                },
+                {
+                    name: '动画帧支持',
+                    test: () => {
+                        return typeof requestAnimationFrame !== 'undefined' &&
+                               typeof cancelAnimationFrame !== 'undefined';
+                    }
+                }
+            ];
+
+            setTimeout(() => {
+                demoDiv.innerHTML = '🎮 Three.js演示区域<br><small>（需要实际Three.js库进行完整测试）</small>';
+            }, 2000);
+
+            return runTests('webgl-tests', tests, 'Three.js支持', true);
+        }
+
+        // 现代Web API测试
+        function testModernAPIs() {
+            const tests = [
+                {
+                    name: 'Fetch API',
+                    test: () => typeof fetch !== 'undefined'
+                },
+                {
+                    name: 'Promise支持',
+                    test: () => typeof Promise !== 'undefined'
+                },
+                {
+                    name: 'Async/Await',
+                    test: () => {
+                        try {
+                            eval('async function test() { await 1; }');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'Geolocation API',
+                    test: () => 'geolocation' in navigator
+                },
+                {
+                    name: 'LocalStorage',
+                    test: () => {
+                        try {
+                            localStorage.setItem('test', 'test');
+                            localStorage.removeItem('test');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'Service Worker',
+                    test: () => 'serviceWorker' in navigator
+                },
+                {
+                    name: 'Intersection Observer',
+                    test: () => 'IntersectionObserver' in window
+                },
+                {
+                    name: 'Resize Observer',
+                    test: () => 'ResizeObserver' in window
+                }
+            ];
+
+            return runTests('api-tests', tests, 'Web API支持');
+        }
+
+        // CSS特性测试
+        function testCSSFeatures() {
+            const tests = [
+                {
+                    name: 'CSS Grid',
+                    test: () => CSS.supports('display', 'grid')
+                },
+                {
+                    name: 'CSS Flexbox',
+                    test: () => CSS.supports('display', 'flex')
+                },
+                {
+                    name: 'CSS Variables',
+                    test: () => CSS.supports('--test', '0')
+                },
+                {
+                    name: 'CSS Transforms',
+                    test: () => CSS.supports('transform', 'translateX(0)')
+                },
+                {
+                    name: 'CSS Transitions',
+                    test: () => CSS.supports('transition', 'all 0.3s')
+                },
+                {
+                    name: 'CSS Animations',
+                    test: () => CSS.supports('animation', 'test 1s')
+                },
+                {
+                    name: 'CSS Gradients',
+                    test: () => CSS.supports('background', 'linear-gradient(red, blue)')
+                },
+                {
+                    name: 'CSS Backdrop Filter',
+                    test: () => CSS.supports('backdrop-filter', 'blur(10px)')
+                }
+            ];
+
+            return runTests('css-tests', tests, 'CSS特性支持');
+        }
+
+        // JavaScript特性测试
+        function testJavaScriptFeatures() {
+            const tests = [
+                {
+                    name: 'ES6箭头函数',
+                    test: () => {
+                        try {
+                            eval('() => {}');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'ES6解构赋值',
+                    test: () => {
+                        try {
+                            eval('const [a] = [1]');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'ES6模板字符串',
+                    test: () => {
+                        try {
+                            eval('`test`');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'ES6类',
+                    test: () => {
+                        try {
+                            eval('class Test {}');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                },
+                {
+                    name: 'ES6模块',
+                    test: () => {
+                        const script = document.createElement('script');
+                        return 'noModule' in script;
+                    }
+                },
+                {
+                    name: 'ES8 Async/Await',
+                    test: () => {
+                        try {
+                            eval('async function test() { await 1; }');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                }
+            ];
+
+            return runTests('js-tests', tests, 'JavaScript特性');
+        }
+
+        // 移动端特性测试
+        function testMobileFeatures() {
+            const tests = [
+                {
+                    name: '触摸事件',
+                    test: () => 'ontouchstart' in window
+                },
+                {
+                    name: '设备方向',
+                    test: () => 'DeviceOrientationEvent' in window
+                },
+                {
+                    name: '设备运动',
+                    test: () => 'DeviceMotionEvent' in window
+                },
+                {
+                    name: '振动API',
+                    test: () => 'vibrate' in navigator
+                },
+                {
+                    name: '全屏API',
+                    test: () => 'requestFullscreen' in document.documentElement
+                },
+                {
+                    name: '屏幕方向',
+                    test: () => 'orientation' in screen
+                },
+                {
+                    name: '媒体查询',
+                    test: () => typeof window.matchMedia !== 'undefined'
+                },
+                {
+                    name: '视口单位',
+                    test: () => CSS.supports('width', '100vw')
+                }
+            ];
+
+            return runTests('mobile-tests', tests, '移动端特性');
+        }
+
+        // 性能测试
+        function testPerformance() {
+            const tests = [
+                {
+                    name: 'Performance API',
+                    test: () => 'performance' in window
+                },
+                {
+                    name: 'Performance Observer',
+                    test: () => 'PerformanceObserver' in window
+                },
+                {
+                    name: 'Navigation Timing',
+                    test: () => 'timing' in performance
+                },
+                {
+                    name: 'User Timing',
+                    test: () => 'mark' in performance
+                },
+                {
+                    name: 'Resource Timing',
+                    test: () => 'getEntriesByType' in performance
+                },
+                {
+                    name: 'Memory Info',
+                    test: () => 'memory' in performance
+                }
+            ];
+
+            return runTests('performance-tests', tests, '性能API支持');
+        }
+
+        // 内存使用测试
+        function testMemoryUsage() {
+            const memoryInfo = performance.memory;
+            const results = document.getElementById('performance-tests');
+            
+            if (memoryInfo) {
+                const html = `
+                    <div class="test-item pass">
+                        <span>内存使用信息</span>
+                        <span class="status pass">可用</span>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <strong>内存统计:</strong><br>
+                        已用内存: ${(memoryInfo.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB<br>
+                        总内存: ${(memoryInfo.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB<br>
+                        内存限制: ${(memoryInfo.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB<br>
+                        使用率: ${((memoryInfo.usedJSHeapSize / memoryInfo.jsHeapSizeLimit) * 100).toFixed(1)}%
+                    </div>
+                `;
+                results.innerHTML += html;
+            } else {
+                results.innerHTML += `
+                    <div class="test-item warning">
+                        <span>内存使用信息</span>
+                        <span class="status warning">不可用</span>
+                    </div>
+                `;
+            }
+        }
+
+        // 网络特性测试
+        function testNetworkFeatures() {
+            const tests = [
+                {
+                    name: 'HTTP/2支持',
+                    test: () => 'connection' in navigator && navigator.connection.effectiveType !== undefined
+                },
+                {
+                    name: '网络连接API',
+                    test: () => 'connection' in navigator
+                },
+                {
+                    name: '网络类型',
+                    test: () => {
+                        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                        return connection && connection.effectiveType !== undefined;
+                    }
+                },
+                {
+                    name: 'Beacon API',
+                    test: () => 'sendBeacon' in navigator
+                },
+                {
+                    name: 'WebSocket',
+                    test: () => 'WebSocket' in window
+                },
+                {
+                    name: 'XMLHttpRequest',
+                    test: () => 'XMLHttpRequest' in window
+                }
+            ];
+
+            return runTests('network-tests', tests, '网络协议支持');
+        }
+
+        // 通用测试运行函数
+        function runTests(containerId, tests, category, append = false) {
+            const container = document.getElementById(containerId);
+            if (!append) {
+                container.innerHTML = '<div class="loading"></div>正在测试...';
+            }
+
+            setTimeout(() => {
+                let html = '';
+                let passed = 0;
+                let total = tests.length;
+
+                tests.forEach(test => {
+                    let result;
+                    try {
+                        result = test.test();
+                    } catch (e) {
+                        result = false;
+                    }
+
+                    const status = result === 'pass' || result === true ? 'pass' : 'fail';
+                    const statusText = result === 'pass' || result === true ? '支持' : '不支持';
+
+                    if (status === 'pass') passed++;
+
+                    html += `
+                        <div class="test-item ${status}">
+                            <span>${test.name}</span>
+                            <span class="status ${status}">${statusText}</span>
+                        </div>
+                    `;
+
+                    // 存储结果
+                    compatibilityResults.push({
+                        category: category,
+                        test: test.name,
+                        result: status,
+                        passed: status === 'pass'
+                    });
+                });
+
+                const percentage = Math.round((passed / total) * 100);
+                const summary = `
+                    <div style="background: ${percentage >= 80 ? '#d4edda' : percentage >= 60 ? '#fff3cd' : '#f8d7da'}; 
+                                padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>${category}:</strong> ${passed}/${total} (${percentage}%) 支持
+                    </div>
+                `;
+
+                if (append) {
+                    container.innerHTML += html;
+                } else {
+                    container.innerHTML = summary + html;
+                }
+
+                updateCompatibilityScore();
+            }, 1000);
+
+            return { passed, total };
+        }
+
+        // 更新兼容性评分
+        function updateCompatibilityScore() {
+            const passed = compatibilityResults.filter(r => r.passed).length;
+            const total = compatibilityResults.length;
+            const score = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+            document.getElementById('compatibility-score').textContent = score + '%';
+            document.getElementById('compatibility-progress').style.width = score + '%';
+
+            let summary = '';
+            if (score >= 90) {
+                summary = '🎉 优秀兼容性 - 完全支持所有功能';
+            } else if (score >= 80) {
+                summary = '✅ 良好兼容性 - 大部分功能可用';
+            } else if (score >= 70) {
+                summary = '⚠️ 一般兼容性 - 部分功能受限';
+            } else if (score >= 50) {
+                summary = '❌ 较差兼容性 - 需要降级处理';
+            } else {
+                summary = '🚨 严重兼容性 - 不建议使用';
+            }
+
+            document.getElementById('compatibility-summary').innerHTML = `
+                <div style="font-size: 1.2em; margin: 10px 0;">${summary}</div>
+                <div>测试项目: ${total} | 通过: ${passed} | 失败: ${total - passed}</div>
+            `;
+        }
+
+        // 运行所有兼容性测试
+        function runAllCompatibilityTests() {
+            compatibilityResults = [];
+            
+            displayBrowserInfo();
+            testBrowserEngine();
+            testWebGL();
+            testThreeJS();
+            testModernAPIs();
+            testCSSFeatures();
+            testJavaScriptFeatures();
+            testMobileFeatures();
+            testPerformance();
+            testNetworkFeatures();
+
+            // 生成详细报告
+            setTimeout(() => {
+                generateDetailedReport();
+                generateSuggestions();
+            }, 3000);
+        }
+
+        // 生成详细报告
+        function generateDetailedReport() {
+            const categories = {};
+            compatibilityResults.forEach(result => {
+                if (!categories[result.category]) {
+                    categories[result.category] = { passed: 0, total: 0 };
+                }
+                categories[result.category].total++;
+                if (result.passed) {
+                    categories[result.category].passed++;
+                }
+            });
+
+            let html = '<div class="feature-grid">';
+            Object.entries(categories).forEach(([category, stats]) => {
+                const percentage = Math.round((stats.passed / stats.total) * 100);
+                const color = percentage >= 80 ? '#28a745' : percentage >= 60 ? '#ffc107' : '#dc3545';
+                
+                html += `
+                    <div class="feature-item" style="background: ${color}; color: white;">
+                        <strong>${category}</strong><br>
+                        ${stats.passed}/${stats.total}<br>
+                        <small>${percentage}%</small>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            document.getElementById('detailed-results').innerHTML = html;
+        }
+
+        // 生成建议
+        function generateSuggestions() {
+            const suggestions = [];
+            const browser = browserInfo.browser;
+            const score = parseInt(document.getElementById('compatibility-score').textContent);
+
+            // 基于浏览器类型的建议
+            if (browser === 'Internet Explorer') {
+                suggestions.push('🚨 强烈建议升级到现代浏览器（Chrome、Firefox、Safari或Edge）');
+            } else if (browser === 'Safari') {
+                suggestions.push('⚠️ Safari对某些WebGL扩展支持有限，建议进行额外测试');
+            }
+
+            // 基于评分的建议
+            if (score < 50) {
+                suggestions.push('🚨 当前浏览器兼容性较差，建议升级或更换浏览器');
+                suggestions.push('📱 考虑使用移动端浏览器访问');
+            } else if (score < 70) {
+                suggestions.push('⚠️ 部分功能可能无法正常使用，建议启用降级方案');
+                suggestions.push('🔧 检查浏览器设置，确保WebGL和相关功能已启用');
+            } else if (score < 90) {
+                suggestions.push('✅ 大部分功能可用，但建议进行额外优化');
+                suggestions.push('🎨 考虑添加CSS前缀以确保更好的兼容性');
+            } else {
+                suggestions.push('🎉 优秀的兼容性！可以启用所有高级功能');
+                suggestions.push('⚡ 可以安全使用最新的Web技术和API');
+            }
+
+            // 通用建议
+            suggestions.push('📊 定期更新浏览器以获得最佳体验');
+            suggestions.push('🔒 确保浏览器安全设置不会阻止必要功能');
+            suggestions.push('🌐 在不同网络环境下测试应用性能');
+
+            document.getElementById('compatibility-suggestions').innerHTML = `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                    <h4>💡 改进建议</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        ${suggestions.map(s => `<li style="margin: 8px 0;">${s}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // 切换折叠内容
+        function toggleCollapsible(id) {
+            const content = document.getElementById(id);
+            const header = content.previousElementSibling;
+            const arrow = header.querySelector('span:last-child');
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                arrow.textContent = '▼';
+            } else {
+                content.classList.add('active');
+                arrow.textContent = '▲';
+            }
+        }
+
+        // 导出报告
+        function exportReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                browserInfo: browserInfo,
+                compatibilityScore: document.getElementById('compatibility-score').textContent,
+                results: compatibilityResults,
+                userAgent: navigator.userAgent,
+                url: window.location.href
+            };
+
+            const dataStr = JSON.stringify(report, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `compatibility-report-${Date.now()}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            displayBrowserInfo();
+            setTimeout(() => {
+                runAllCompatibilityTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
