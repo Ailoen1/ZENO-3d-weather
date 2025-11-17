@@ -5,7 +5,7 @@
 import { Uniform, Color, Vector3 } from 'three'
 import { BlendFunction, Effect } from 'postprocessing'
 import { wrapEffect } from './util.js'
-import { useRef, useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import { easing } from 'maath'
@@ -188,7 +188,7 @@ function UltimateLensFlare({
       lensRef.current.uniforms.get('iResolution').value.x = viewport.width
       lensRef.current.uniforms.get('iResolution').value.y = viewport.height
     }
-  }, [viewport])
+  }, [viewport, lensRef])
 
   return useMemo(
     () => (

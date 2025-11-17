@@ -7,12 +7,9 @@ import { weatherService } from './services/weatherService';
 function App() {
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [currentLocationName, setCurrentLocationName] = useState('');
   const [isPortalMode, setIsPortalMode] = useState(false);
-  const [exitPortalFunction, setExitPortalFunction] = useState(null);
   const [portalWeatherData, setPortalWeatherData] = useState(null);
-  const [errorSearchQuery, setErrorSearchQuery] = useState('');
 
   useEffect(() => {
     loadCurrentLocationWeather();
@@ -20,7 +17,6 @@ function App() {
 
   const loadCurrentLocationWeather = async () => {
     setIsLoading(true);
-    setError(null);
     
     try {
       const location = await weatherService.getCurrentLocation();
@@ -29,7 +25,6 @@ function App() {
       setCurrentLocationName(`${data.location.name}, ${data.location.region}`);
     } catch (error) {
       console.error('Error loading weather:', error);
-      setError('Unable to load weather data. Please try entering a city manually.');
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +32,6 @@ function App() {
 
   const handleLocationChange = async (location) => {
     setIsLoading(true);
-    setError(null);
     
     try {
       const data = await weatherService.getCurrentWeather(location);
@@ -45,7 +39,6 @@ function App() {
       setCurrentLocationName(`${data.location.name}, ${data.location.region}`);
     } catch (error) {
       console.error('Error loading weather for location:', error);
-      setError('Unable to load weather data for this location. Please try a different city.');
     } finally {
       setIsLoading(false);
     }
@@ -60,14 +53,6 @@ function App() {
 
   const handlePortalWeatherDataChange = (data) => {
     setPortalWeatherData(data);
-  };
-
-  const handleErrorSearch = async (e) => {
-    e.preventDefault();
-    if (errorSearchQuery.trim()) {
-      await handleLocationChange(errorSearchQuery.trim());
-      setErrorSearchQuery('');
-    }
   };
 
   // Use portal weather data when in portal mode, otherwise use main weather data
@@ -87,7 +72,6 @@ function App() {
           weatherData={weatherData} 
           isLoading={isLoading}
           onPortalModeChange={setIsPortalMode}
-          onSetExitPortalFunction={setExitPortalFunction}
           onPortalWeatherDataChange={handlePortalWeatherDataChange}
         />
       </div>
@@ -101,7 +85,7 @@ function App() {
               {/* Portal Mode Header */}
               <div className={`absolute top-6 left-6 z-20 ${textColor}`}>
                 <button 
-                  onClick={() => exitPortalFunction?.()}
+                  onClick={() => setIsPortalMode(false)}
                   className={`flex items-center space-x-2 px-4 py-2 ${textColor} opacity-80 hover:opacity-100 transition-opacity`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,47 +185,7 @@ function App() {
         </div>
       )}
       
-      {error && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-lg z-50">
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 max-w-sm mx-4 text-center border border-white/20">
-            <p className="text-white text-lg font-light mb-6 leading-relaxed">{error}</p>
-            
-            {/* Search form for manual city entry */}
-            <form onSubmit={handleErrorSearch} className="mb-6">
-              <div className="flex items-center space-x-2 bg-white/10 rounded-2xl p-3 border border-white/20">
-                <input
-                  type="text"
-                  value={errorSearchQuery}
-                  onChange={(e) => setErrorSearchQuery(e.target.value)}
-                  placeholder="Enter city name..."
-                  className="flex-1 bg-transparent text-white placeholder-white/60 focus:outline-none text-sm font-light"
-                  disabled={isLoading}
-                />
-                <button 
-                  type="submit" 
-                  className="text-white/80 hover:text-white transition-colors disabled:opacity-40"
-                  disabled={!errorSearchQuery.trim() || isLoading}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-              </div>
-            </form>
 
-            {/* Buttons */}
-            <div className="flex space-x-3">
-              <button 
-                onClick={loadCurrentLocationWeather} 
-                className="flex-1 bg-white/20 hover:bg-white/30 px-4 py-3 rounded-2xl text-white font-light transition-all duration-300 border border-white/30 hover:scale-105 text-sm"
-                disabled={isLoading}
-              >
-                Try Location Again
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

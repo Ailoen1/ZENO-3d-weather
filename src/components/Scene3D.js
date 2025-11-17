@@ -1,10 +1,10 @@
 import React, { Suspense, useMemo, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Sky, Stars, Text } from '@react-three/drei';
+import { Sky, Stars, Text, OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import UltimateLensFlare from './lensflare/LensFlare';
 import ForecastPortals from './ForecastPortals';
-import { getWeatherConditionType, shouldShowSun } from '../services/weatherService';
+import { shouldShowSun } from '../services/weatherService';
 import * as THREE from 'three';
 import WeatherVisualization from './WeatherVisualization';
 
@@ -164,7 +164,7 @@ const Scene3D = ({ weatherData, isLoading, onPortalModeChange, onSetExitPortalFu
   // Provide exit function to parent
   React.useEffect(() => {
     onSetExitPortalFunction?.(() => exitPortal);
-  }, [onSetExitPortalFunction]);
+  }, [onSetExitPortalFunction, exitPortal]);
   
   const getTimeOfDay = () => {
     if (!weatherData?.location?.localtime) return 'day';
